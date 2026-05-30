@@ -3,7 +3,32 @@ module PhyloDataIO
 using BioSequences
 using FASTX
 
-export read_PhyloData, read_phylip, read_fasta, write_phylip, write_fasta, read_taxa_char_table, read_nexus, write_PhyloData, write_nexus
+### function to handle sequences and transform sequence data to a matrix and a vector of taxa for computational analyses
+### There is no documentation yet. 
+
+export read_PhyloData, read_phylip, read_fasta, write_phylip, write_fasta, read_taxa_char_table, read_nexus, write_PhyloData, write_nexus, dict_to_taxa_matrix_tuple, matrix_to_dict, detect_sequence_type
+
+
+function dict_to_taxa_matrix_tuple(seqs::Dict{String,String})::Tuple{Vector{String},Matrix{Char}}
+    taxa= sort(collect(keys(seqs)))
+    ntaxa = length(taxa)
+    nsites = length(seqs[taxa[1]])
+    sequences_as_a_matrix= Matrix{Char}(undef, ntaxa, nsites)
+    for (i, taxon) in enumerate(taxa)
+        for j in 1:nsites
+            sequences_as_a_matrix[i, j] = seqs[taxon][j]
+        end
+    end
+    return taxa, sequences_as_a_matrix
+end
+
+function matrix_to_dict(taxa::Vector{String}, mat::Matrix{Char})::Dict{String,String}
+    seqs = Dict{String,String}()
+    for (i, taxon) in enumerate(taxa)
+        seqs[taxon] = String(mat[i, :])
+    end
+    return seqs
+end
 
 function detect_sequence_type(seq::String)::String
     aa_only = Set(['E','F','I','L','P','Q','Z','J','O','U'])
@@ -50,8 +75,6 @@ function write_PhyloData(seqs::Dict{String,String},filename::String,format::Stri
         write_fasta(filename, seqs)
     end
 end
-
-
 
 function read_taxa_char_table(filename::String)::Dict{String,String}
     seqs= Dict{String,String}()
@@ -165,6 +188,5 @@ function write_fasta(filename::String, seqs::Dict{String,String})
         end
     end
 end
-
 
 end
